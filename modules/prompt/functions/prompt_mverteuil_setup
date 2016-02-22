@@ -1,0 +1,209 @@
+# vim:ft=zsh ts=2 sw=2 sts=2
+#
+# mverteuil's Theme - https://gist.github.com/3712874
+# A Powerline-inspired theme for ZSH
+#
+# # README
+#
+# In order for this theme to render correctly, you will need a
+# [Powerline-patched font](https://gist.github.com/1595572).
+#
+# In addition, I recommend the
+# [Solarized theme](https://github.com/altercation/solarized/) and, if you're
+# using it on Mac OS X, [iTerm 2](http://www.iterm2.com/) over Terminal.app -
+# it has significantly better color fidelity.
+#
+# # Goals
+#
+# The aim of this theme is to only show you *relevant* information. Like most
+# prompts, it will only show git information when in a git working directory.
+# However, it goes a step further: everything from the current user and
+# hostname to whether the last call exited with an error to whether background
+# jobs are running in this shell will all be displayed automatically when
+# appropriate.
+
+pmodload 'helper'
+
+### Segment drawing
+# A few utility functions to make it easy and re-usable to draw segmented prompts
+
+CURRENT_BG='NONE'
+PRIMARY_FG=black
+
+# Characters
+SEGMENT_SEPARATOR="\ue0b0"
+CROSS="\u2718"
+LIGHTNING="\u26a1"
+GEAR="\u2699"
+CLOCK="🕑"
+
+_PROMPT_MVERTEUIL_START_TIME=$SECONDS
+
+# Begin a segment
+# Takes two arguments, background and foreground. Both can be omitted,
+# rendering default background/foreground.
+prompt_segment() {
+  local bg fg
+  [[ -n $1 ]] && bg="%K{$1}" || bg="%k"
+  [[ -n $2 ]] && fg="%F{$2}" || fg="%f"
+  if [[ $CURRENT_BG != 'NONE' && $1 != $CURRENT_BG ]]; then
+    print -n "%{$bg%F{$CURRENT_BG}%}$SEGMENT_SEPARATOR%{$fg%}"
+  else
+    print -n "%{$bg%}%{$fg%}"
+  fi
+  CURRENT_BG=$1
+  [[ -n $3 ]] && print -n $3
+}
+
+# End the prompt, closing any open segments
+prompt_end() {
+  if [[ -n $CURRENT_BG ]]; then
+    print -n "%{%k%F{$CURRENT_BG}%}$SEGMENT_SEPARATOR"
+  else
+    print -n "%{%k%}"
+  fi
+  print -n "%{%f%}"
+  CURRENT_BG=''
+}
+
+### Prompt components
+# Each component will draw itself, and hide itself if no information needs to be shown
+
+# Context: hostname (where am I)
+prompt_context() {
+  prompt_segment white black " %(!.%{%F{green}%}.)%m "
+}
+
+# Python: active virtualenv
+prompt_python() {
+  if [[ -n "$python_info" ]]; then
+    prompt_segment green black
+    print -Pn " ${python_info[virtualenv]} "
+  fi
+}
+
+# Git: branch/detached head, status icons
+prompt_git() {
+  if [[ -n "$git_info" ]]; then
+    prompt_segment blue $PRIMARY_FG
+    print -Pn " ${git_info[ref]}${git_info[status]} "
+  fi
+}
+
+# Dir: current working directory
+prompt_dir() {
+  prompt_segment cyan $PRIMARY_FG ' %~ '
+}
+
+# Status:
+# - was there an error
+# - am I root
+# - are there background jobs?
+prompt_status() {
+  local symbols
+  symbols=()
+  [[ $RETVAL -ne 0 ]] && symbols+="%{%F{red}%}$CROSS"
+  [[ $UID -eq 0 ]] && symbols+="%{%F{yellow}%}$LIGHTNING"
+  [[ $(jobs -l | wc -l) -gt 0 ]] && symbols+="%{%F{cyan}%}$GEAR"
+
+  [[ -n "$symbols" ]] && prompt_segment $PRIMARY_FG default " $symbols "
+}
+
+prompt_mverteuil_print_elapsed_time() {
+  local end_time=$(( SECONDS - _PROMPT_MVERTEUIL_START_TIME ))
+  local hours minutes seconds remainder
+  if (( end_time >= 3600 )); then
+    hours=$(( end_time / 3600 ))
+    remainder=$(( end_time % 3600 ))
+    minutes=$(( remainder / 60 ))
+    seconds=$(( remainder % 60 ))
+    print -P "\n%B%F{magenta} $CLOCK : ${hours}h${minutes}m${seconds}s%b\n"
+  elif (( end_time >= 60 )); then
+    minutes=$(( end_time / 60 ))
+    seconds=$(( end_time % 60 ))
+    print -P "\n%B%F{magenta} $CLOCK : ${minutes}m${seconds}s%b\n"
+  elif (( end_time > 10 )); then
+    print -P "\n%B%F{magenta} $CLOCK : ${end_time}s%b\n"
+  fi
+  _PROMPT_MVERTEUIL_START_TIME=$SECONDS 
+}
+
+## Main prompt
+prompt_mverteuil_main() {
+  RETVAL=$?
+  CURRENT_BG='NONE'
+  prompt_status
+  prompt_context
+  prompt_dir
+  prompt_python
+  prompt_git
+  prompt_end
+}
+
+prompt_mverteuil_precmd() {
+  setopt LOCAL_OPTIONS
+  unsetopt XTRACE KSH_ARRAYS
+
+  # Get Git repository information.
+  if (( $+functions[git-info] )); then
+    git-info
+  fi
+
+  # Get python virtualenv information.
+  if (( $+functions[python-info] )); then
+    python-info
+  fi
+
+  prompt_mverteuil_print_elapsed_time
+}
+
+prompt_mverteuil_preexec() {
+  _prompt_mverteuil_start_time="$SECONDS"
+}
+
+prompt_mverteuil_setup() {
+  setopt LOCAL_OPTIONS
+  unsetopt XTRACE KSH_ARRAYS
+  prompt_opts=(cr percent subst)
+
+  # Load required functions.
+  autoload -Uz add-zsh-hook
+  autoload -Uz colors;colors
+
+  # Add hook for calling git-info before each command.
+  add-zsh-hook precmd prompt_mverteuil_precmd
+  add-zsh-hook preexec prompt_mverteuil_preexec
+
+  # Set editor-info parameters.
+  zstyle ':prezto:module:editor:info:completing' format '%B%F{red}...%f%b'
+  zstyle ':prezto:module:editor:info:keymap:primary' format '%B%F{blue}❯%f%b'
+  zstyle ':prezto:module:editor:info:keymap:primary:overwrite' format '%F{red}♺%f'
+  zstyle ':prezto:module:editor:info:keymap:alternate' format '%B%F{red}❮%f%b'
+
+  # Set git-info parameters.
+  zstyle ':prezto:module:git:info' verbose 'yes'
+  zstyle ':prezto:module:git:info:action' format ' ⁝ %s'
+  zstyle ':prezto:module:git:info:added' format ' ✚'
+  zstyle ':prezto:module:git:info:ahead' format ' ⬆'
+  zstyle ':prezto:module:git:info:behind' format ' ⬇'
+  zstyle ':prezto:module:git:info:branch' format ' %b'
+  zstyle ':prezto:module:git:info:commit' format '➦ %.7c'
+  zstyle ':prezto:module:git:info:deleted' format ' ✖'
+  zstyle ':prezto:module:git:info:dirty' format ' ⁝'
+  zstyle ':prezto:module:git:info:modified' format ' ✱'
+  zstyle ':prezto:module:git:info:position' format '%p'
+  zstyle ':prezto:module:git:info:renamed' format ' ➙'
+  zstyle ':prezto:module:git:info:stashed' format ' S'
+  zstyle ':prezto:module:git:info:unmerged' format ' ═'
+  zstyle ':prezto:module:git:info:untracked' format ' ?'
+  zstyle ':prezto:module:git:info:keys' format 'ref' '$(coalesce "%b" "%p" "%c")' 'status' '%s%D%A%B%S%a%d%m%r%U%u'
+
+  # %v - virtualenv name.
+  zstyle ':prezto:module:python:info:virtualenv' format '%v'
+
+  PROMPT='%{%f%b%k%}$(prompt_mverteuil_main) '
+  RPROMPT=''
+  SPROMPT='zsh: correct %F{red}%R%f to %F{green}%r%f [nyae]? '
+}
+
+prompt_mverteuil_setup "$@"
