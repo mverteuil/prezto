@@ -10,5 +10,6 @@ if [[ "$SHLVL" -eq 1 && ! -o LOGIN && -s "${ZDOTDIR:-$HOME}/.zprofile" ]]; then
   source "${ZDOTDIR:-$HOME}/.zprofile"
 fi
 
+export PATH=~/.local/bin:/Applications/Postgres.app/Contents/Versions/9.5/bin:$PATH
 export DEFAULT_USER=mverteuil
 export PROJECT_HOME=~/Documents/Codebase

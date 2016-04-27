@@ -23,3 +23,14 @@ fi
 setopt CLOBBER
 
 alias gst="git status"
+
+# Load chruby
+source /usr/local/opt/chruby/share/chruby/chruby.sh
+
+# Shell integration
+test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+
+# Prompt
+autoload -Uz promptinit
+promptinit
+prompt mverteuil
