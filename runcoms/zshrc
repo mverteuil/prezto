@@ -11,9 +11,11 @@ if [[ -s "${ZDOTDIR:-$HOME}/.zprezto/init.zsh" ]]; then
 fi
 
 # Use base16 shell
-BASE16_SHELL="$HOME/.config/base16-shell/base16-embers.dark.sh"
+BASE16_SHELL="/Users/mverteuil/.config/base16-shell/base16-tomorrow.dark.sh"
 [[ -s $BASE16_SHELL ]] && source $BASE16_SHELL
 
+# Virtualenv/VirtualenvWrapper
+export VIRTUALENVWRAPPER_VIRTUALENV_ARGS='--system-site-packages'
 source /usr/local/bin/virtualenvwrapper.sh
 if [[ -n $+functions[python-info] ]]; then
     python-info
@@ -21,6 +23,7 @@ fi
 
 # Allow clobbering existing files
 setopt CLOBBER
+
 
 alias gst="git status"
 
@@ -30,7 +33,3 @@ source /usr/local/opt/chruby/share/chruby/chruby.sh
 # Shell integration
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
-# Prompt
-autoload -Uz promptinit
-promptinit
-prompt mverteuil
