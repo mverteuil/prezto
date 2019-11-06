@@ -3,6 +3,7 @@
 #
 # Authors:
 #   Sorin Ionescu <sorin.ionescu@gmail.com>
+#   Matthew de Verteuil <mverteuil@github.com>
 #
 
 # Source Prezto.
@@ -10,4 +11,51 @@ if [[ -s "${ZDOTDIR:-$HOME}/.zprezto/init.zsh" ]]; then
   source "${ZDOTDIR:-$HOME}/.zprezto/init.zsh"
 fi
 
-# Customize to your needs...
+# ------------- Customize below -------------
+
+# Initialize nodenv, if it exists
+if command -v nodenv 1>/dev/null 2>&1; then
+  eval "$(nodenv init -)"
+fi
+
+# Load iTerm2 shell integration, if it exists
+if [[ -f "${ZDOTDIR:-$HOME}/.iterm2_shell_integration.zsh" ]]; then
+  source "${ZDOTDIR:-$HOME}/.iterm2_shell_integration.zsh"
+fi
+
+if [[ -f "$HOME/.okta/bash_functions" ]]; then
+    . "$HOME/.okta/bash_functions"
+fi
+if [[ -d "$HOME/.okta/bin" && ":$PATH:" != *":$HOME/.okta/bin:"* ]]; then
+    PATH="$HOME/.okta/bin:$PATH"
+fi
+
+# Heroku Autocompletion
+export HEROKU_AC_ZSH_SETUP_PATH=$HOME/Library/Caches/heroku/autocomplete/zsh_setup
+test -f $HEROKU_AC_ZSH_SETUP_PATH && source $HEROKU_AC_ZSH_SETUP_PATH;
+unset HEROKU_AC_ZSH_SETUP_PATH
+
+# Allow file clobbering
+setopt CLOBBER
+
+# Load base16 shell integration, if it exists
+BASE16_SHELL=$HOME/.config/base16-shell/
+[ -n "$PS1" ] && [ -s $BASE16_SHELL/profile_helper.sh ] && eval "$($BASE16_SHELL/profile_helper.sh)"
+
+export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)
+
+# Project switcher
+if test ! -z $PROJECT_HOME; then
+    function project () {
+        cd $PROJECT_HOME/$1
+    }
+
+    # Project switched completion
+    function _project () {
+        _path_files -/ -W $PROJECT_HOME
+    }
+
+    compdef _project project
+else
+    echo "------\nERROR: Project home was not set, project switcher not loaded.\n------\n"
+fi
