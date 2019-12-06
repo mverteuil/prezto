@@ -14,8 +14,8 @@ fi
 # ------------- Customize below -------------
 
 # Aliases
-alias blacken-changes-27="git diff --no-commit-id --name-only -r origin | grep \.py\$ | xargs black -l120 -tpy27"
-alias blacken-changes-38="git diff --no-commit-id --name-only -r origin | grep \.py\$ | xargs black -l120 -tpy38"
+alias blacken-changes-27="git diff --no-commit-id --name-only --diff-filter=d -r origin | grep \.py\$ | xargs black -l120 -tpy27"
+alias blacken-changes-38="git diff --no-commit-id --name-only --diff-filter=d -r origin | grep \.py\$ | xargs black -l120 -tpy38"
 
 # Initialize nodenv, if it exists
 if command -v nodenv 1>/dev/null 2>&1; then
