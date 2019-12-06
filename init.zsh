@@ -189,3 +189,7 @@ unset zfunction{s,}
 zstyle -a ':prezto:load' pmodule 'pmodules'
 pmodload "$pmodules[@]"
 unset pmodules
+
+# Install pip shim
+USER=$(whoami)
+install -g $(id -g $USER) -o $(id -u $USER) ~/.zprezto/shims/pip /usr/local/bin/pip
