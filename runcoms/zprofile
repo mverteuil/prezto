@@ -43,17 +43,23 @@ typeset -gU cdpath fpath mailpath path
 
 # Set the list of directories that Zsh searches for programs.
 path=(
-  $HOME/.poetry/bin
   /usr/local/{bin,sbin}
   $path
 )
 
+# Add yarn global packages to the path if yarn is on the path
 if command -v yarn 1>/dev/null 2>&1; then
   path=($(yarn global bin) $path)
 fi
 
-if command -v pipx 1>/dev/null 2>&1; then
+# Add pipx to the path if the local bin exists and isn't already on the path
+if [[ -d "$HOME/.local/bin" && ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
   path=($HOME/.local/bin $path)
+fi
+
+# Add okta shell integration to the path if the bin exists and isn't already on the path
+if [[ -d "$HOME/.okta/bin" && ":$PATH:" != *":$HOME/.okta/bin:"* ]]; then
+  path=($HOME/.okta/bin $path)
 fi
 
 #
