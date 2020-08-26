@@ -16,3 +16,4 @@ fi
 export EDITOR="vim"
 export PROJECT_HOME="$HOME/Codebase"
 export PYENV_ROOT="$HOME/.pyenv"
+export LOLCOMMITS_DEVICE="FaceTime HD Camera"

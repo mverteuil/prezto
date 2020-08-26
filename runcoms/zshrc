@@ -52,12 +52,23 @@ if test ! -z $PROJECT_HOME; then
         cd $PROJECT_HOME/$1
     }
 
+    function org () {
+        cd $PROJECT_HOME/orgs/$1
+    }
+
     # Project switched completion
     function _project () {
-        _path_files -/ -W $PROJECT_HOME
+        _arguments -C \
+        "1: :{_path_files -/ -W $PROJECT_HOME}"
+    }
+
+    function _org () {
+        _arguments -C \
+        "1: :{_path_files -/ -W $PROJECT_HOME/orgs}"
     }
 
     compdef _project project
+    compdef _org org
 else
     echo "------\nERROR: Project home was not set, project switcher not loaded.\n------\n"
 fi
