@@ -15,7 +15,8 @@ fi
 
 # Aliases
 alias blacken-changes-27="git diff --no-commit-id --name-only --diff-filter=d -r origin | grep \.py\$ | xargs black -l120 -tpy27"
-alias blacken-changes-38="git diff --no-commit-id --name-only --diff-filter=d -r origin | grep \.py\$ | xargs black -l120 -tpy38"
+alias blacken-changes-38="git diff --no-commit-id --name-only --diff-filter=d -ir origin | grep \.py\$ | xargs black -l120 -tpy38"
+alias wipe-pycharm-helpers="docker ps -a | grep -i pycharm | awk '{print \$1}' | xargs docker rm && docker images | grep -i pycharm | awk '{print \$3}' | xargs docker rmi"
 
 # Initialize nodenv, if it exists
 if command -v nodenv 1>/dev/null 2>&1; then
@@ -72,6 +73,7 @@ if test ! -z $PROJECT_HOME; then
 else
     echo "------\nERROR: Project home was not set, project switcher not loaded.\n------\n"
 fi
+
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
